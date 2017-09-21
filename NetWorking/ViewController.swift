@@ -89,8 +89,42 @@ class ViewController: UIViewController {
         task.resume()
     }
     
-    func enviarPOST () {
-        
+    func enviarPOST() {
+        // Validação do Endpoint, com guard
+        guard let postURL = URL(string: postEndPoint) else {
+            print("Erro na URL de requisição POST")
+            return
+        }
+        // Seguindo os passos
+        var request = URLRequest(url: postURL)
+        let urlSession = URLSession.shared
+        // No caso do POST, temos que definir alguns parâmetros
+        let postParams: [String: Any] = ["hello": "Caelum_BR was here" as Any]
+        // Mais alguns parâmetros de configuração
+        request.httpMethod = "POST"
+        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject:
+            postParams, options: JSONSerialization.WritingOptions())
+        } catch {
+            print("Erro na chamada POST")
+        }
+        // Pegar o retorno do servidor
+        let task = urlSession.dataTask(with: request) { (data, response, error) in
+            // Retorno do protocolo HTTP
+            //  response = 200
+            guard let realResponse = response as? HTTPURLResponse, realResponse.statusCode == 200 else {
+                print("Erro na resposta protocolo HTTP")
+                return
+            }
+            // Parsear o JSON de resposta
+            if let postString = String(data: data!, encoding:String.Encoding.utf8) {
+                // Atualizar a interface
+                self.performSelector(onMainThread: #selector(ViewController.updatePostLabel(_:)), with: postString, waitUntilDone: false)
+            }
+        }
+        // Executar o comando
+        task.resume()
     }
     
     // MARK: - Selectors
